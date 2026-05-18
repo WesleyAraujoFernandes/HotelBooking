@@ -5,14 +5,24 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import com.example.HotelBooking.entities.User;
+import com.example.HotelBooking.exceptions.NotFoundException;
+import com.example.HotelBooking.repositories.UserRepository;
+
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
+
+    private final UserRepository userRepository;
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        throw new UnsupportedOperationException("Unimplemented method 'loadUserByUsername'");
+        User user = userRepository.findByEmail(username).orElseThrow(() -> new NotFoundException("user Not Found"));
+        return AuthUser.builder()
+                .user(user)
+                .build();
     }
 
 }
