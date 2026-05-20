@@ -37,7 +37,7 @@ public class UserController {
         return ResponseEntity.ok(userService.deleteOwnAccount());
     }
 
-    @DeleteMapping("/account")
+    @GetMapping("/account")
     public ResponseEntity<Response> getOwnAccountDetails() {
         return ResponseEntity.ok(userService.getOwnAccountDetails());
     }
