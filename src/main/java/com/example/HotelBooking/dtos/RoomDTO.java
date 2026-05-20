@@ -20,7 +20,7 @@ import lombok.NoArgsConstructor;
 public class RoomDTO {
     private Long id;
     private Integer roomNumber;
-    private RoomType roomType;
+    private RoomType type;
     private BigDecimal pricePerNight;
     private Integer capacity;
     private String description;
