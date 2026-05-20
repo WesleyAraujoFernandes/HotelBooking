@@ -22,17 +22,17 @@ public interface RoomRepository extends JpaRepository<Room, Long> {
                     com.example.HotelBooking.enums.BookingStatus.CHECKED_IN
                 )
             )
-            AND (:roomType IS NULL OR r.roomType = :roomType)
+            AND (:type IS NULL OR r.type = :type)
             """)
     List<Room> findAvailebleRooms(
             @Param("checkInDate") LocalDate checkInDate,
             @Param("checkOutDate") LocalDate checkOutDate,
-            @Param("roomType") RoomType roomType);
+            @Param("type") RoomType type);
 
     @Query("""
             SELECT r FROM Room r
             WHERE CAST(r.roomNumber AS string) LIKE %:searchParam%
-                OR LOWER(CAST(r.roomType AS string)) LIKE LOWER(CONCAT('%', :searchParam, '%'))
+                OR LOWER(CAST(r.type AS string)) LIKE LOWER(CONCAT('%', :searchParam, '%'))
                 OR CAST(r.pricePerNight AS string) LIKE %:searchParam%
                 OR CAST(r.capacity AS string) LIKE %:searchParam%
                 OR LOWER(r.description) LIKE LOWER(CONCAT('%', :searchParam, '%'))

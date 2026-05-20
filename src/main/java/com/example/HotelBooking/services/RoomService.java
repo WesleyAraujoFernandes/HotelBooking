@@ -1,4 +1,4 @@
-package com.example.HotelBooking.services.impl;
+package com.example.HotelBooking.services;
 
 import java.time.LocalDate;
 import java.util.List;

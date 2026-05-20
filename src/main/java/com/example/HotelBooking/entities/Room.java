@@ -33,7 +33,7 @@ public class Room {
     @Column(unique = true)
     private Integer roomNumber;
     @Enumerated(EnumType.STRING)
-    private RoomType roomType;
+    private RoomType type;
     @DecimalMin(value = "0.1", message = "Price per night must be greater than 0")
     private BigDecimal pricePerNight;
     @Min(value = 1, message = "Capacity must be greater than 0")
