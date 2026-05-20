@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -47,7 +48,7 @@ public class RoomController {
         return ResponseEntity.ok(roomService.addRoom(roomDTO, imageFile));
     }
 
-    @PostMapping("/update")
+    @PutMapping("/update")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<Response> updateRoom(
             @RequestParam(value = "roomNumber", required = false) Integer roomNumber,
@@ -58,6 +59,7 @@ public class RoomController {
             @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
             @RequestParam(value = "id", required = true) Long id) {
         RoomDTO roomDTO = RoomDTO.builder()
+                .id(id)
                 .roomNumber(roomNumber)
                 .type(type)
                 .pricePerNight(pricePerNight)
