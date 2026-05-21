@@ -32,12 +32,12 @@ public class RoomController {
     @PostMapping("/add")
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<Response> addRoom(
-            @RequestParam Integer roomNumber,
-            @RequestParam RoomType type,
-            @RequestParam BigDecimal pricePerNight,
-            @RequestParam Integer capacity,
-            @RequestParam String description,
-            @RequestParam MultipartFile imageFile) {
+            @RequestParam(value = "roomNumber" ) Integer roomNumber,
+            @RequestParam(value = "type" ) RoomType type,
+            @RequestParam(value = "pricePerNight" ) BigDecimal pricePerNight,
+            @RequestParam(value = "capacity" ) Integer capacity,
+            @RequestParam(value = "description" ) String description,
+            @RequestParam(value = "imageFile" ) MultipartFile imageFile) {
         RoomDTO roomDTO = RoomDTO.builder()
                 .roomNumber(roomNumber)
                 .type(type)
