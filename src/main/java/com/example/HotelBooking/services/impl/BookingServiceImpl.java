@@ -123,7 +123,6 @@ public class BookingServiceImpl implements BookingService {
         return Response.builder()
                 .status(200)
                 .message("Booking created successfully")
-                .booking(bookingDTO)
                 .build();
     }
 

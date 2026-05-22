@@ -25,6 +25,7 @@ public class NotificationServiceImpl implements NotificationService {
     public void sendEmail(NotificationDTO notificationDTO) {
         log.info("Sending Email...");
         SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
+        simpleMailMessage.setFrom("wesley.a.fernandes@gmail.com");
         simpleMailMessage.setTo(notificationDTO.getRecipient());
         simpleMailMessage.setSubject(notificationDTO.getSubject());
         simpleMailMessage.setText(notificationDTO.getBody());
