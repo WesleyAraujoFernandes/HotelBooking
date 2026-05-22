@@ -2,6 +2,8 @@ package com.example.HotelBooking.services.impl;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import org.modelmapper.ModelMapper;
@@ -10,11 +12,15 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.example.HotelBooking.dtos.BookingDTO;
+import com.example.HotelBooking.dtos.NotificationDTO;
 import com.example.HotelBooking.dtos.Response;
 import com.example.HotelBooking.entities.Booking;
 import com.example.HotelBooking.entities.Room;
 import com.example.HotelBooking.entities.User;
+import com.example.HotelBooking.enums.BookingStatus;
+import com.example.HotelBooking.enums.PaymentStatus;
 import com.example.HotelBooking.exceptions.InvalidBookingStateAndDateException;
+import com.example.HotelBooking.exceptions.NotFoundException;
 import com.example.HotelBooking.notifications.NotificationService;
 import com.example.HotelBooking.repositories.BookingRepository;
 import com.example.HotelBooking.repositories.RoomRepository;
@@ -53,20 +59,20 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public Response findBookingByReferenceNo(String referenceNo) {
-        // TODO Auto-generated method stub
-        return null;
+    public Response findBookingByReferenceNo(String bookingReference) {
+        Booking booking = bookingRepository.findByBookingReference(bookingReference)
+                .orElseThrow(() -> new RuntimeException("Booking not found with reference: " + bookingReference));
+        BookingDTO bookingDTO = modelMapper.map(booking, BookingDTO.class);
+        return Response.builder()
+                .status(200)
+                .message("success")
+                .booking(bookingDTO)
+                .build();
     }
 
     @Override
     public Response createBooking(BookingDTO bookingDTO) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public Response updateBooking(BookingDTO bookingDTO) {
-        User user = userService.getCurrentLoggedInUser();
+        User currentUser = userService.getCurrentLoggedInUser();
         Room room = roomRepository.findById(bookingDTO.getRoomId())
                 .orElseThrow(() -> new RuntimeException("Room not found with id: " + bookingDTO.getRoomId()));
         // VALIDATION: Ensure check-in date is not before today
@@ -89,11 +95,63 @@ public class BookingServiceImpl implements BookingService {
         }
 
         BigDecimal totalPrice = calculateTotalPrice(room, bookingDTO);
+        String bookingReference = bookingCodeGenerator.generateBookingReference();
+        // CREATE AND SAVE TO DATABASE
+        Booking booking = new Booking();
+        booking.setUser(currentUser);
+        booking.setRoom(room);
+        booking.setCheckInDate(bookingDTO.getCheckInDate());
+        booking.setCheckOutDate(bookingDTO.getCheckOutDate());
+        booking.setTotalPrice(totalPrice);
+        booking.setBookingReference(bookingReference);
+        booking.setBookingStatus(BookingStatus.BOOKED);
+        booking.setPaymentStatus(PaymentStatus.PENDING);
+        booking.setCreatedAt(LocalDate.now());
+        bookingRepository.save(booking);
+        String paymentLink = "http://localhost:4200/payment/" + bookingReference + "/" + totalPrice;
+        log.info("Booking created with reference: {}. Payment link: {}", bookingReference, paymentLink);
+        
+        // SEND EMAIL NOTIFICATION TO USER
+        NotificationDTO notificationDTO = NotificationDTO.builder()
+                .recipient(currentUser.getEmail())
+                .subject("Booking Confirmation - Reference: " + bookingReference)
+                .body(String.format("Your Booking has been created successfully. \n "+
+                "Please procced with your payment using the payment like below \n%s", paymentLink))
+                .bookingReference(bookingReference)
+                .build();
+        notificationService.sendEmail(notificationDTO);
+        return Response.builder()
+                .status(200)
+                .message("Booking created successfully")
+                .booking(bookingDTO)
+                .build();
+    }
+
+    @Override
+    public Response updateBooking(BookingDTO bookingDTO) {
+        if (bookingDTO.getId() == null) {
+            throw new NotFoundException("Booking ID is required for update");
+        }
+        Booking existingBooking = bookingRepository.findById(bookingDTO.getId())
+                .orElseThrow(() -> new NotFoundException("Booking not found with id: " + bookingDTO.getId()));
+        if (bookingDTO.getBookingStatus() != null) {
+            existingBooking.setBookingStatus(bookingDTO.getBookingStatus());
+        }
+        if(bookingDTO.getPaymentStatus() != null) {
+            existingBooking.setPaymentStatus(bookingDTO.getPaymentStatus());
+        }
+        bookingRepository.save(existingBooking);
+        return Response.builder()
+                .status(200)
+                .message("Booking updated successfully")
+                .booking(bookingDTO)
+                .build();
     }
 
     private BigDecimal calculateTotalPrice(Room room, BookingDTO bookingDTO) {
-        long numberOfNights = bookingDTO.getCheckInDate().until(bookingDTO.getCheckOutDate()).getDays();
-        return room.getPricePerNight().multiply(BigDecimal.valueOf(numberOfNights));
+        BigDecimal pricePerNight = room.getPricePerNight();
+        long days  = ChronoUnit.DAYS.between(bookingDTO.getCheckInDate(), bookingDTO.getCheckOutDate());
+        return pricePerNight.multiply(BigDecimal.valueOf(days));
     }
 
 }
