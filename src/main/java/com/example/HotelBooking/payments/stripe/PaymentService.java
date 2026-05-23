@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import com.example.HotelBooking.dtos.NotificationDTO;
 import com.example.HotelBooking.dtos.Response;
 import com.example.HotelBooking.entities.Booking;
-import com.example.HotelBooking.entities.BookingReference;
 import com.example.HotelBooking.entities.PaymentEntity;
 import com.example.HotelBooking.enums.NotificationType;
 import com.example.HotelBooking.enums.PaymentGatway;
@@ -36,7 +35,7 @@ public class PaymentService {
     @Value("${stripe.api.secret.key}")
     private String secretKey;
 
-    public Response createPaymentIntent(PaymentRequest paymentRequest) {
+    public Response initializePayment(PaymentRequest paymentRequest) {
         log.info("Inside createPaymentIntent with bookingReference: {}", paymentRequest.getBookingReference());
         Stripe.apiKey = secretKey;
 
@@ -117,4 +116,5 @@ public class PaymentService {
             emailService.sendEmail(notificationDTO);
         }
     }
+
 }
